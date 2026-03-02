@@ -1,28 +1,34 @@
-
+import { createClient } from '@supabase/supabase-js';
 import { Product, Client, Invoice } from '../types';
 
-const STORAGE_KEYS = {
-  PRODUCTS: 'wc_products',
-  CLIENTS: 'wc_clients',
-  INVOICES: 'wc_invoices'
-};
+// Use the credentials already in your project
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const getStoredData = <T,>(key: string, defaultValue: T): T => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : defaultValue;
-};
-
-export const setStoredData = (key: string, data: any) => {
-  localStorage.setItem(key, JSON.stringify(data));
-};
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const Database = {
-  getProducts: () => getStoredData<Product[]>(STORAGE_KEYS.PRODUCTS, []),
-  saveProducts: (products: Product[]) => setStoredData(STORAGE_KEYS.PRODUCTS, products),
-  
-  getClients: () => getStoredData<Client[]>(STORAGE_KEYS.CLIENTS, []),
-  saveClients: (clients: Client[]) => setStoredData(STORAGE_KEYS.CLIENTS, clients),
-  
-  getInvoices: () => getStoredData<Invoice[]>(STORAGE_KEYS.INVOICES, []),
-  saveInvoices: (invoices: Invoice[]) => setStoredData(STORAGE_KEYS.INVOICES, invoices),
+  getProducts: async (): Promise<Product[]> => {
+    const { data, error } = await supabase.from('products').select('*');
+    if (error) alert(`Error: ${error.message}`);
+    return data || [];
+  },
+  saveProducts: async (products: Product[]) => {
+    await supabase.from('products').upsert(products);
+  },
+  getClients: async (): Promise<Client[]> => {
+    const { data, error } = await supabase.from('clients').select('*');
+    if (error) alert(`Error: ${error.message}`);
+    return data || [];
+  },
+  saveClients: async (clients: Client[]) => {
+    await supabase.from('clients').upsert(clients);
+  },
+  getInvoices: async (): Promise<Invoice[]> => {
+    const { data, error } = await supabase.from('invoices').select('*');
+    return data || [];
+  },
+  saveInvoices: async (invoices: Invoice[]) => {
+    await supabase.from('invoices').upsert(invoices);
+  }
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Product, Client, Invoice, Payment } from './types';
 import { Database } from './utils/storage';
@@ -28,6 +27,7 @@ const SidebarItem = ({ id, icon: Icon, label, activeTab, isSidebarOpen, onClick 
 
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'clients' | 'inventory' | 'invoices' | 'reports'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -35,16 +35,26 @@ const App: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
 
+  // --- Initialization: fetch from Supabase cloud ---
   useEffect(() => {
-    // Check session
-    const auth = localStorage.getItem('wc_auth');
-    if (auth === 'true') {
-      setIsAuthenticated(true);
-    }
+    const loadData = async () => {
+      try {
+        const auth = localStorage.getItem('wc_auth');
+        if (auth === 'true') {
+          setIsAuthenticated(true);
+          // Fetch from Supabase cloud instead of localStorage
+          setProducts(await Database.getProducts());
+          setClients(await Database.getClients());
+          setInvoices(await Database.getInvoices());
+        }
+      } catch (err) {
+        console.error('Failed to initialize app data:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    setProducts(Database.getProducts());
-    setClients(Database.getClients());
-    setInvoices(Database.getInvoices());
+    loadData();
   }, []);
 
   const handleLogin = (status: boolean) => {
@@ -57,40 +67,42 @@ const App: React.FC = () => {
   const handleEndSession = () => {
     const isConfirmed = window.confirm("Terminate current session and exit White Copy ERP?");
     if (isConfirmed) {
-      // 1. Clear session marker
       localStorage.removeItem('wc_auth');
-      
-      // 2. Clear local state
       setIsAuthenticated(false);
-      
-      // 3. Force hard reset to root to purge memory
       window.location.replace(window.location.origin + window.location.pathname);
     }
   };
 
-  const handleAddProduct = (product: Product) => {
+  // --- Inventory Handlers (async for cloud save) ---
+  const handleAddProduct = async (product: Product) => {
     const updated = [...products, product];
     setProducts(updated);
-    Database.saveProducts(updated);
+    await Database.saveProducts(updated);
   };
 
-  const handleUpdateStock = (productId: string, newStock: number) => {
-    const updated = products.map(p => p.id === productId ? { ...p, stockCount: newStock } : p);
+  const handleUpdateStock = async (productId: string, newStock: number) => {
+    const updated = products.map(p =>
+      p.id === productId ? { ...p, stockCount: newStock } : p
+    );
     setProducts(updated);
-    Database.saveProducts(updated);
+    await Database.saveProducts(updated);
   };
 
-  const handleAddClient = (client: Client) => {
+  // --- Client Handler (async for cloud save) ---
+  const handleAddClient = async (client: Client) => {
     const updated = [...clients, client];
     setClients(updated);
-    Database.saveClients(updated);
+    await Database.saveClients(updated); // Wait for cloud save
   };
 
-  const handleCreateInvoice = (invoice: Invoice) => {
+  // --- Finalize & Save Invoice (async for cloud save) ---
+  const handleCreateInvoice = async (invoice: Invoice) => {
+    // 1. Persist the new invoice
     const updatedInvoices = [...invoices, invoice];
     setInvoices(updatedInvoices);
-    Database.saveInvoices(updatedInvoices);
+    await Database.saveInvoices(updatedInvoices);
 
+    // 2. Update client debt
     const updatedClients = clients.map(c => {
       if (c.id === invoice.clientId) {
         return { ...c, totalDebt: c.totalDebt + invoice.total };
@@ -98,8 +110,9 @@ const App: React.FC = () => {
       return c;
     });
     setClients(updatedClients);
-    Database.saveClients(updatedClients);
+    await Database.saveClients(updatedClients);
 
+    // 3. Deduct stock
     const updatedProducts = products.map(p => {
       const item = invoice.items.find(i => i.productId === p.id);
       if (item) {
@@ -108,10 +121,11 @@ const App: React.FC = () => {
       return p;
     });
     setProducts(updatedProducts);
-    Database.saveProducts(updatedProducts);
+    await Database.saveProducts(updatedProducts);
   };
 
-  const handleAddPayment = (clientId: string, payment: Payment) => {
+  const handleAddPayment = async (clientId: string, payment: Payment) => {
+    // 1. Update client paid amount
     const updatedClients = clients.map(c => {
       if (c.id === clientId) {
         return { ...c, totalPaid: c.totalPaid + payment.amount };
@@ -119,26 +133,27 @@ const App: React.FC = () => {
       return c;
     });
     setClients(updatedClients);
-    Database.saveClients(updatedClients);
+    await Database.saveClients(updatedClients);
 
+    // 2. Apply payment across unpaid invoices
     let remainingPayment = payment.amount;
     const updatedInvoices = invoices.map(inv => {
       if (inv.clientId === clientId && remainingPayment > 0) {
         const currentPaid = inv.payments.reduce((acc, p) => acc + p.amount, 0);
         const amountNeeded = inv.total - currentPaid;
-        
+
         if (amountNeeded > 0) {
           const appliedAmount = Math.min(amountNeeded, remainingPayment);
           remainingPayment -= appliedAmount;
-          
+
           const newPayment = { ...payment, amount: appliedAmount };
           const updatedInvPayments = [...inv.payments, newPayment];
           const newTotalPaid = currentPaid + appliedAmount;
-          
+
           return {
             ...inv,
             payments: updatedInvPayments,
-            status: newTotalPaid >= inv.total ? 'Paid' : 'Partial'
+            status: newTotalPaid >= inv.total ? 'Paid' : 'Partial',
           } as Invoice;
         }
       }
@@ -146,8 +161,18 @@ const App: React.FC = () => {
     });
 
     setInvoices(updatedInvoices);
-    Database.saveInvoices(updatedInvoices);
+    await Database.saveInvoices(updatedInvoices);
   };
+
+  // --- Loading screen while data initializes ---
+  if (isLoading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-white gap-4">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-slate-400 text-sm font-medium tracking-wide uppercase">Initializing White Copy ERP…</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <LoginPage onLogin={handleLogin} />;
@@ -163,8 +188,8 @@ const App: React.FC = () => {
               <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Enterprises</span>
             </div>
           )}
-          <button 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
             title={isSidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
           >
@@ -180,9 +205,8 @@ const App: React.FC = () => {
           <SidebarItem id="reports" icon={BarChart2} label="Business Reports" activeTab={activeTab} isSidebarOpen={isSidebarOpen} onClick={setActiveTab} />
         </nav>
 
-        {/* System Exit Section */}
         <div className="p-4 border-t border-slate-800 bg-slate-950">
-          <button 
+          <button
             onClick={handleEndSession}
             className={`w-full flex items-center rounded-xl text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all font-black uppercase text-[10px] tracking-widest group border border-transparent hover:border-rose-500/20 shadow-sm py-4 ${
               isSidebarOpen ? 'px-4 gap-3' : 'justify-center px-0'
