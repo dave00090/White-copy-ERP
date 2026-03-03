@@ -107,10 +107,12 @@ const App: React.FC = () => {
   };
 
   const handleCreateInvoice = async (invoice: Invoice) => {
+    // 1. Save invoice
     const updatedInvoices = [...invoices, invoice];
     setInvoices(updatedInvoices);
     await Database.saveInvoices(updatedInvoices);
 
+    // 2. Update client debt
     const updatedClients = clients.map(c =>
       c.id === invoice.clientId
         ? { ...c, totalDebt: c.totalDebt + invoice.total }
@@ -119,11 +121,17 @@ const App: React.FC = () => {
     setClients(updatedClients);
     await Database.saveClients(updatedClients);
 
-    const updatedProducts = products.map(p => {
-      const item = invoice.items.find(i => i.productId === p.id);
-      return item
-        ? { ...p, stockCount: Math.max(0, p.stockCount - item.quantity) }
-        : p;
+    // 3. Update stock levels, EXCLUDING Services
+    const updatedProducts = products.map(product => {
+      const soldItem = invoice.items.find(item => item.productId === product.id);
+
+      if (soldItem && product.category !== 'Service') {
+        return {
+          ...product,
+          stockCount: Math.max(0, product.stockCount - soldItem.quantity)
+        };
+      }
+      return product;
     });
     setProducts(updatedProducts);
     await Database.saveProducts(updatedProducts);

@@ -16,13 +16,11 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [selectedType, setSelectedType] = useState<'Invoice' | 'Delivery Note'>('Invoice');
 
-  // Filtering State
   const [filterClient, setFilterClient] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Pending' | 'Partial' | 'Paid'>('All');
   const [filterDateStart, setFilterDateStart] = useState('');
   const [filterDateEnd, setFilterDateEnd] = useState('');
 
-  // Single Invoice State
   const generateInitialInvNum = () => `INV-${Date.now().toString().slice(-6)}`;
   const generateInitialDNNum = () => `DN-${Date.now().toString().slice(-6)}`;
 
@@ -36,12 +34,10 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
     clientName: ''
   });
 
-  // Batch Invoicing State
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [batchItems, setBatchItems] = useState<InvoiceItem[]>([]);
   const [batchSearchTerm, setBatchSearchTerm] = useState('');
   
-  // Item adding state (used for both single and batch)
   const [selectedProduct, setSelectedProduct] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [customPrice, setCustomPrice] = useState(0);
@@ -188,7 +184,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
           <p className="text-slate-500 text-xs font-bold uppercase mt-1">Manual Input & Professional Records</p>
         </div>
         <div className="flex gap-3">
-          {/* ✅ Larger Touch Target applied */}
           <button 
             onClick={() => setShowBatchModal(true)}
             className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-3 md:py-2 rounded-xl font-bold border border-slate-700 transition-all text-sm md:text-base"
@@ -196,7 +191,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
             <Layers className="w-5 h-5" />
             <span>Batch Billing</span>
           </button>
-          {/* ✅ Larger Touch Target applied */}
           <button 
             onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-xl shadow-blue-500/20"
@@ -259,9 +253,8 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
         </div>
       </div>
 
-      {/* ✅ Responsive Table: scrollable container wrapping the table */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto"> {/* Critical for mobile swiping */}
+        <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[600px]">
             <thead className="bg-slate-900/50">
               <tr>
@@ -293,7 +286,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                   </td>
                   <td className="px-6 py-5">
                     <div className="flex justify-center gap-2">
-                      {/* ✅ Larger Touch Target applied */}
                       <button 
                         onClick={() => setPreviewInvoice(invoice)}
                         className="p-3 md:p-2.5 bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-all"
@@ -301,7 +293,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                       >
                         <Eye className="w-5 h-5 md:w-4 md:h-4" />
                       </button>
-                      {/* ✅ Larger Touch Target applied */}
                       <button 
                         onClick={() => generateDocumentPDF(invoice, 'Invoice')}
                         className="p-3 md:p-2.5 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-xl transition-all"
@@ -309,7 +300,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                       >
                         <FileText className="w-5 h-5 md:w-4 md:h-4" />
                       </button>
-                      {/* ✅ Larger Touch Target applied */}
                       <button 
                         onClick={() => generateDocumentPDF(invoice, 'Delivery Note')}
                         className="p-3 md:p-2.5 bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-white rounded-xl transition-all"
@@ -414,7 +404,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                         onChange={(e) => setQuantity(Number(e.target.value))}
                       />
                     </div>
-                    {/* ✅ Larger Touch Target applied */}
                     <button 
                       onClick={() => handleAddItem(true)}
                       className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base"
@@ -425,24 +414,34 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                   </div>
                 </div>
 
+                {/* BATCH ITEM LIST with Labor Service badge */}
                 <div className="flex-1 overflow-y-auto space-y-3 mb-8">
-                  {batchItems.length > 0 ? batchItems.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between bg-slate-900 p-5 rounded-2xl border border-slate-800">
-                      <div className="flex gap-4 items-center">
-                        <span className="w-8 h-8 flex items-center justify-center bg-slate-800 text-slate-500 rounded-xl text-xs font-black">{idx + 1}</span>
-                        <div>
-                          <p className="font-bold text-white">{item.productName}</p>
-                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{item.quantity} UNITS @ KES {item.unitPrice.toLocaleString()}</p>
+                  {batchItems.length > 0 ? batchItems.map((item, idx) => {
+                    const product = products.find(p => p.id === item.productId);
+                    const isService = product?.category === 'Service';
+                    return (
+                      <div key={idx} className="flex items-center justify-between bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                        <div className="flex gap-4 items-center">
+                          <span className="w-8 h-8 flex items-center justify-center bg-slate-800 text-slate-500 rounded-xl text-xs font-black">{idx + 1}</span>
+                          <div>
+                            <p className="font-bold text-white">{item.productName}</p>
+                            {isService && (
+                              <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded uppercase font-black">
+                                Labor Service
+                              </span>
+                            )}
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{item.quantity} UNITS @ KES {item.unitPrice.toLocaleString()}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-8">
+                          <p className="font-black text-white text-lg">KES {item.totalPrice.toLocaleString()}</p>
+                          <button onClick={() => handleRemoveItem(idx, true)} className="text-rose-500 hover:bg-rose-500/10 p-2 rounded-xl">
+                            <Trash2 className="w-5 h-5" />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-8">
-                        <p className="font-black text-white text-lg">KES {item.totalPrice.toLocaleString()}</p>
-                        <button onClick={() => handleRemoveItem(idx, true)} className="text-rose-500 hover:bg-rose-500/10 p-2 rounded-xl">
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  )) : (
+                    );
+                  }) : (
                     <div className="h-full flex flex-col items-center justify-center text-slate-600 border-2 border-dashed border-slate-800 rounded-[2rem]">
                       <ShoppingCart className="w-12 h-12 mb-4 opacity-20" />
                       <p className="text-xs font-bold uppercase tracking-widest">No items added to batch yet</p>
@@ -459,7 +458,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                   </div>
                   <div className="flex gap-4">
                      <button onClick={() => setShowBatchModal(false)} className="px-8 py-4 border border-slate-700 text-slate-500 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800">Discard Batch</button>
-                     {/* ✅ Larger Touch Target applied */}
                      <button 
                         disabled={selectedClientIds.length === 0 || batchItems.length === 0}
                         onClick={handleCreateBatch}
@@ -565,7 +563,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                     onChange={(e) => setQuantity(Number(e.target.value))}
                   />
                 </div>
-                {/* ✅ Larger Touch Target applied */}
                 <button 
                   onClick={() => handleAddItem(false)}
                   className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-lg shadow-blue-500/20"
@@ -575,24 +572,34 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                 </button>
               </div>
 
+              {/* SINGLE INVOICE ITEM LIST with Labor Service badge */}
               <div className="mt-8 space-y-3">
-                {newInvoice.items?.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between bg-slate-900 p-5 rounded-2xl border border-slate-800">
-                    <div className="flex gap-4 items-center">
-                      <span className="w-8 h-8 flex items-center justify-center bg-slate-800 text-slate-500 rounded-xl text-xs font-black">{idx + 1}</span>
-                      <div>
-                        <p className="font-bold text-white">{item.productName}</p>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{item.quantity} UNITS @ KES {item.unitPrice.toLocaleString()}</p>
+                {newInvoice.items?.map((item, idx) => {
+                  const product = products.find(p => p.id === item.productId);
+                  const isService = product?.category === 'Service';
+                  return (
+                    <div key={idx} className="flex items-center justify-between bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                      <div className="flex gap-4 items-center">
+                        <span className="w-8 h-8 flex items-center justify-center bg-slate-800 text-slate-500 rounded-xl text-xs font-black">{idx + 1}</span>
+                        <div>
+                          <p className="font-bold text-white">{item.productName}</p>
+                          {isService && (
+                            <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded uppercase font-black">
+                              Labor Service
+                            </span>
+                          )}
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{item.quantity} UNITS @ KES {item.unitPrice.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-8">
+                        <p className="font-black text-white text-lg">KES {item.totalPrice.toLocaleString()}</p>
+                        <button onClick={() => handleRemoveItem(idx, false)} className="text-rose-500 hover:bg-rose-500/10 p-2 rounded-xl transition-all">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-8">
-                      <p className="font-black text-white text-lg">KES {item.totalPrice.toLocaleString()}</p>
-                      <button onClick={() => handleRemoveItem(idx, false)} className="text-rose-500 hover:bg-rose-500/10 p-2 rounded-xl transition-all">
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -605,7 +612,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                 <p className="text-5xl font-black text-white">KES {(newInvoice.items?.reduce((a, b) => a + b.totalPrice, 0) || 0).toLocaleString()}</p>
                 <div className="flex gap-4 mt-8">
                   <button onClick={() => setShowCreateModal(false)} className="px-10 py-4 border border-slate-700 text-slate-500 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800">Discard</button>
-                  {/* ✅ Larger Touch Target applied */}
                   <button
                     onClick={handleCreate}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-2xl shadow-blue-500/40"
@@ -646,7 +652,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
             </div>
             
             <div className="flex-1 overflow-hidden flex bg-slate-950">
-              {/* Printed Document Preview */}
               <div className="flex-1 overflow-y-auto p-12 bg-slate-950 flex justify-center">
                 <div className="bg-white p-12 shadow-2xl text-slate-900 min-h-[900px] w-full max-w-[800px] rounded-lg">
                   <div className="text-center mb-10">
@@ -670,7 +675,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                     </div>
                   </div>
 
-                  {/* ✅ Responsive Table: scrollable container wrapping the preview table */}
                   <div className="overflow-x-auto">
                     <table className="w-full mb-12 border border-[#1E407C] min-w-[400px]">
                       <thead className="bg-white border-b border-[#1E407C]">
@@ -681,15 +685,27 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                           {selectedType === 'Invoice' && <th className="py-4 px-4 text-right">Total</th>}
                         </tr>
                       </thead>
+                      {/* PREVIEW ITEM LIST with Labor Service badge */}
                       <tbody className="divide-y divide-slate-100">
-                        {previewInvoice.items.map((item, i) => (
-                          <tr key={i}>
-                            <td className="py-4 px-4 border-r border-[#1E407C] font-black text-black">{item.quantity}</td>
-                            <td className="py-4 px-4 border-r border-[#1E407C] font-bold text-slate-700">{item.productName}</td>
-                            {selectedType === 'Invoice' && <td className="py-4 px-4 border-r border-[#1E407C] text-right font-bold text-slate-500">{item.unitPrice.toLocaleString()}</td>}
-                            {selectedType === 'Invoice' && <td className="py-4 px-4 text-right font-black text-black">KES {item.totalPrice.toLocaleString()}</td>}
-                          </tr>
-                        ))}
+                        {previewInvoice.items.map((item, i) => {
+                          const product = products.find(p => p.id === item.productId);
+                          const isService = product?.category === 'Service';
+                          return (
+                            <tr key={i}>
+                              <td className="py-4 px-4 border-r border-[#1E407C] font-black text-black">{item.quantity}</td>
+                              <td className="py-4 px-4 border-r border-[#1E407C] font-bold text-slate-700">
+                                <span>{item.productName}</span>
+                                {isService && (
+                                  <span className="ml-2 text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded uppercase font-black">
+                                    Labor Service
+                                  </span>
+                                )}
+                              </td>
+                              {selectedType === 'Invoice' && <td className="py-4 px-4 border-r border-[#1E407C] text-right font-bold text-slate-500">{item.unitPrice.toLocaleString()}</td>}
+                              {selectedType === 'Invoice' && <td className="py-4 px-4 text-right font-black text-black">KES {item.totalPrice.toLocaleString()}</td>}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -706,7 +722,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
                 </div>
               </div>
 
-              {/* Sidebar: Financial Tracking Details */}
               <div className="w-96 border-l border-slate-800 bg-slate-900/50 p-8 overflow-y-auto">
                 <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-blue-500" /> Financial Tracking
@@ -753,7 +768,6 @@ const InvoiceManager: React.FC<Props> = ({ invoices, clients, products, onCreate
             </div>
             
             <div className="p-8 border-t border-slate-800 flex justify-end gap-4 bg-slate-900">
-              {/* ✅ Larger Touch Target applied */}
               <button 
                 onClick={() => generateDocumentPDF(previewInvoice, selectedType)}
                 className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-xl shadow-blue-500/20"
