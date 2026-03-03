@@ -107,8 +107,12 @@ const App: React.FC = () => {
   };
 
   const handleCreateInvoice = async (invoice: Invoice) => {
-    // 1. Save invoice
-    const updatedInvoices = [...invoices, invoice];
+  // Normalize date to clean DD/MM/YYYY format
+  const cleanDate = new Date(invoice.date).toLocaleDateString('en-GB');
+  invoice = { ...invoice, date: cleanDate };
+
+  // 1. Save invoice
+  const updatedInvoices = [...invoices, invoice];
     setInvoices(updatedInvoices);
     await Database.saveInvoices(updatedInvoices);
 

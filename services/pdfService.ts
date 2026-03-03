@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Invoice } from '../types';
@@ -50,19 +49,20 @@ export const generateDocumentPDF = (invoice: Invoice, type: 'Invoice' | 'Deliver
     doc.text("Kiamumbi", margin, 51);
     doc.text("Maziwa Stage", margin, 56);
 
-    // Client/Ref Boxes with White background
+    // 1. Reset colors to Blue border and White fill to prevent "Black Patches"
     doc.setDrawColor(BLUE_BRAND[0], BLUE_BRAND[1], BLUE_BRAND[2]);
     doc.setFillColor(255, 255, 255);
     doc.setLineWidth(0.5);
-    
+    // 2. Draw the Client Box (Left side)
     doc.roundedRect(margin, 65, 90, 25, 3, 3, 'FD');
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(0, 0, 0); // Black text for the content
     doc.text(`M/s: ${invoice.clientName}`, margin + 5, 72);
-    
+    // 3. Draw the Date/Ref Box (Right side)
+    // We move the text slightly lower (74 instead of 72) to ensure it is centered in the box
     doc.roundedRect(pageWidth - margin - 65, 65, 65, 25, 2, 2, 'FD');
-    doc.text(`Date: ${invoice.date}`, pageWidth - margin - 60, 72);
-    doc.text(`D/Note No: ${invoice.deliveryNoteNumber}`, pageWidth - margin - 60, 78);
-    doc.text(`Order No: ${invoice.invoiceNumber}`, pageWidth - margin - 60, 84);
+    doc.text(`Date: ${invoice.date}`, pageWidth - margin - 60, 74);
+    doc.text(`D/Note No: ${invoice.deliveryNoteNumber}`, pageWidth - margin - 60, 80);
+    doc.text(`Order No: ${invoice.invoiceNumber}`, pageWidth - margin - 60, 86);
 
     autoTable(doc, {
       startY: 95,
