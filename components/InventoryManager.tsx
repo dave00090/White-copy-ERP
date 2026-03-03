@@ -6,9 +6,10 @@ interface Props {
   products: Product[];
   onAddProduct: (product: Product) => void;
   onUpdateStock: (productId: string, newStock: number) => void;
+  onDeleteProduct: (productId: string) => void; // Add this
 }
 
-const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateStock }) => {
+const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateStock, onDeleteProduct }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -119,6 +120,7 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
                 <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700">Current Stock</th>
                 <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700">Status</th>
                 <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 text-right">Actions</th>
+                <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700 text-right">Delete</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
@@ -203,6 +205,15 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
                         <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
                       </button>
                     )}
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <button 
+                      onClick={() => onDeleteProduct(product.id)}
+                      className="p-2.5 text-rose-400 hover:text-white hover:bg-rose-600 rounded-xl transition-all border border-transparent hover:border-rose-500"
+                      title="Delete Product"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}

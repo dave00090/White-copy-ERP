@@ -7,9 +7,10 @@ interface Props {
   invoices: Invoice[];
   onAddClient: (client: Client) => void;
   onAddPayment: (clientId: string, payment: Payment) => void;
+  onDeleteClient: (clientId: string) => void; // Added
 }
 
-const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddPayment }) => {
+const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddPayment, onDeleteClient }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
@@ -76,7 +77,6 @@ const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddP
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          {/* ✅ Larger Touch Target applied */}
           <button 
             onClick={() => setShowAddModal(true)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base"
@@ -139,7 +139,14 @@ const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddP
                 </div>
 
                 <div className="mt-6 flex gap-2">
-                  {/* ✅ Larger Touch Target applied */}
+                  {/* Delete Button */}
+                  <button 
+                    onClick={() => onDeleteClient(client.id)}
+                    className="p-3 bg-rose-500/10 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
+                    title="Delete School"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                   <button 
                     onClick={() => setSelectedClient(client)}
                     className="flex-1 flex items-center justify-center gap-2 bg-slate-900 text-slate-400 hover:bg-slate-700 hover:text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base"
@@ -147,7 +154,6 @@ const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddP
                     <History className="w-5 h-5" />
                     <span>Statement</span>
                   </button>
-                  {/* ✅ Larger Touch Target applied */}
                   <button 
                     onClick={() => { setSelectedClient(client); setShowPaymentModal(true); }}
                     className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-lg shadow-blue-500/20"
@@ -331,7 +337,6 @@ const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddP
               </div>
               <div className="flex gap-4 pt-4">
                 <button onClick={() => setShowPaymentModal(false)} className="flex-1 px-6 py-4 border border-slate-700 text-slate-500 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all">Cancel</button>
-                {/* ✅ Larger Touch Target applied */}
                 <button
                   onClick={handleAddPayment}
                   className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-xl shadow-blue-500/20"
@@ -378,7 +383,6 @@ const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddP
               </div>
               <div className="flex gap-4 pt-6">
                 <button onClick={() => setShowAddModal(false)} className="flex-1 px-6 py-4 border border-slate-700 text-slate-500 rounded-xl font-black uppercase text-xs tracking-widest">Cancel</button>
-                {/* ✅ Larger Touch Target applied */}
                 <button
                   onClick={handleAddClient}
                   className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-xl shadow-blue-500/20"

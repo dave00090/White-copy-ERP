@@ -84,10 +84,26 @@ const App: React.FC = () => {
     await Database.saveProducts(updated);
   };
 
+  const handleDeleteProduct = async (productId: string) => {
+    if (window.confirm("Remove this item from inventory?")) {
+      const updated = products.filter(p => p.id !== productId);
+      setProducts(updated);
+      await Database.saveProducts(updated);
+    }
+  };
+
   const handleAddClient = async (client: Client) => {
     const updated = [...clients, client];
     setClients(updated);
     await Database.saveClients(updated);
+  };
+
+  const handleDeleteClient = async (clientId: string) => {
+    if (window.confirm("Are you sure you want to delete this school? This action cannot be undone.")) {
+      const updated = clients.filter(c => c.id !== clientId);
+      setClients(updated);
+      await Database.saveClients(updated);
+    }
   };
 
   const handleCreateInvoice = async (invoice: Invoice) => {
@@ -171,7 +187,6 @@ const App: React.FC = () => {
         ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'}
       `}>
         
-        {/* EXISTING SIDEBAR CONTENT UNCHANGED */}
         <div className="p-6 flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-xl font-black text-white tracking-tighter leading-none">WHITE COPY</span>
@@ -230,8 +245,23 @@ const App: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-4 md:p-8 w-full">
           <div className="max-w-7xl mx-auto">
             {activeTab === 'dashboard' && <Dashboard products={products} clients={clients} invoices={invoices} />}
-            {activeTab === 'clients' && <ClientManager clients={clients} invoices={invoices} onAddClient={handleAddClient} onAddPayment={handleAddPayment} />}
-            {activeTab === 'inventory' && <InventoryManager products={products} onAddProduct={handleAddProduct} onUpdateStock={handleUpdateStock} />}
+            {activeTab === 'clients' && (
+              <ClientManager
+                clients={clients}
+                invoices={invoices}
+                onAddClient={handleAddClient}
+                onAddPayment={handleAddPayment}
+                onDeleteClient={handleDeleteClient}
+              />
+            )}
+            {activeTab === 'inventory' && (
+              <InventoryManager
+                products={products}
+                onAddProduct={handleAddProduct}
+                onUpdateStock={handleUpdateStock}
+                onDeleteProduct={handleDeleteProduct}
+              />
+            )}
             {activeTab === 'invoices' && <InvoiceManager invoices={invoices} clients={clients} products={products} onCreateInvoice={handleCreateInvoice} />}
             {activeTab === 'reports' && <Reports invoices={invoices} clients={clients} products={products} />}
           </div>
