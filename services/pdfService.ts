@@ -23,7 +23,7 @@ export const generateDocumentPDF = (invoice: Invoice, type: 'Invoice' | 'Deliver
 
   if (type === 'Invoice') {
     // --- INVOICE TEMPLATE ---
-    // Top Label Box: Now White background with Blue border as requested
+    // Top Label Box: White background with Blue border
     doc.setDrawColor(BLUE_BRAND[0], BLUE_BRAND[1], BLUE_BRAND[2]);
     doc.setFillColor(255, 255, 255);
     doc.roundedRect(pageWidth / 2 - 20, 10, 40, 10, 2, 2, 'FD');
@@ -49,19 +49,21 @@ export const generateDocumentPDF = (invoice: Invoice, type: 'Invoice' | 'Deliver
     doc.text("Kiamumbi", margin, 51);
     doc.text("Maziwa Stage", margin, 56);
 
-    // 1. Reset colors to Blue border and White fill to prevent "Black Patches"
+    // 1. Set the border color to your brand blue and text to black
     doc.setDrawColor(BLUE_BRAND[0], BLUE_BRAND[1], BLUE_BRAND[2]);
-    doc.setFillColor(255, 255, 255);
+    doc.setTextColor(0, 0, 0);
     doc.setLineWidth(0.5);
-    // 2. Draw the Client Box (Left side)
-    doc.roundedRect(margin, 65, 90, 25, 3, 3, 'FD');
-    doc.setTextColor(0, 0, 0); // Black text for the content
-    doc.text(`M/s: ${invoice.clientName}`, margin + 5, 72);
-    // 3. Draw the Date/Ref Box (Right side)
-    // We move the text slightly lower (74 instead of 72) to ensure it is centered in the box
-    doc.roundedRect(pageWidth - margin - 65, 65, 65, 25, 2, 2, 'FD');
-    doc.text(`Date: ${invoice.date}`, pageWidth - margin - 60, 74);
-    doc.text(`D/Note No: ${invoice.deliveryNoteNumber}`, pageWidth - margin - 60, 80);
+    // 2. Draw Client Box (Left) - Using 'D' for Draw only (no background fill)
+    doc.roundedRect(margin, 65, 90, 25, 3, 3, 'D');
+    doc.setFont("helvetica", "bold");
+    doc.text(`M/s: ${invoice.clientName}`, margin + 5, 75);
+    // 3. Draw Date/Ref Box (Right) - Using 'D' to prevent black patches
+    doc.roundedRect(pageWidth - margin - 65, 65, 65, 25, 2, 2, 'D');
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    // Adjusted coordinates for perfect centering inside the box
+    doc.text(`Date: ${invoice.date}`, pageWidth - margin - 60, 72);
+    doc.text(`D/Note No: ${invoice.deliveryNoteNumber}`, pageWidth - margin - 60, 79);
     doc.text(`Order No: ${invoice.invoiceNumber}`, pageWidth - margin - 60, 86);
 
     autoTable(doc, {
@@ -90,7 +92,7 @@ export const generateDocumentPDF = (invoice: Invoice, type: 'Invoice' | 'Deliver
     doc.setFont("helvetica", "normal");
     doc.text("E.&O.E.   No.", margin, finalY + 10);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 0, 0); 
+    doc.setTextColor(0, 0, 0);
     doc.text(`TOTAL: ${invoice.total.toLocaleString()}`, pageWidth - margin, finalY + 10, { align: 'right' });
 
     doc.setFontSize(8);
@@ -171,6 +173,5 @@ export const generateDocumentPDF = (invoice: Invoice, type: 'Invoice' | 'Deliver
     doc.text("Official Rubber Stamp", pageWidth - margin, finalY + 80, { align: 'right' });
   }
 
-  // Files will download to default browser folder with dynamic naming
   doc.save(`White_Copy_${type.replace(' ', '_')}_${invoice.invoiceNumber}.pdf`);
 };
