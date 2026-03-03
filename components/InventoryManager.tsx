@@ -249,6 +249,7 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
                   <option value="Spare Part">Spare Part</option>
                   <option value="Printer">Printer</option>
                   <option value="Service">Service</option>
+                  <option value="Others">Others</option>
                 </select>
               </div>
               <div>
