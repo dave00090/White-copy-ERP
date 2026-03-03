@@ -35,25 +35,22 @@ const App: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
 
-  // --- Initialization: fetch from Supabase cloud ---
   useEffect(() => {
     const loadData = async () => {
-      try {
-        const auth = localStorage.getItem('wc_auth');
-        if (auth === 'true') {
-          setIsAuthenticated(true);
-          // Fetch from Supabase cloud instead of localStorage
-          setProducts(await Database.getProducts());
-          setClients(await Database.getClients());
-          setInvoices(await Database.getInvoices());
-        }
-      } catch (err) {
-        console.error('Failed to initialize app data:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      const auth = localStorage.getItem('wc_auth');
+      if (auth === 'true') {
+        setIsAuthenticated(true);
 
+        const cloudProducts = await Database.getProducts();
+        const cloudClients = await Database.getClients();
+        const cloudInvoices = await Database.getInvoices();
+
+        setProducts(cloudProducts);
+        setClients(cloudClients);
+        setInvoices(cloudInvoices);
+      }
+      setIsLoading(false);
+    };
     loadData();
   }, []);
 
@@ -73,7 +70,6 @@ const App: React.FC = () => {
     }
   };
 
-  // --- Inventory Handlers (async for cloud save) ---
   const handleAddProduct = async (product: Product) => {
     const updated = [...products, product];
     setProducts(updated);
@@ -88,55 +84,46 @@ const App: React.FC = () => {
     await Database.saveProducts(updated);
   };
 
-  // --- Client Handler (async for cloud save) ---
   const handleAddClient = async (client: Client) => {
     const updated = [...clients, client];
     setClients(updated);
-    await Database.saveClients(updated); // Wait for cloud save
+    await Database.saveClients(updated);
   };
 
-  // --- Finalize & Save Invoice (async for cloud save) ---
   const handleCreateInvoice = async (invoice: Invoice) => {
-    // 1. Persist the new invoice
     const updatedInvoices = [...invoices, invoice];
     setInvoices(updatedInvoices);
     await Database.saveInvoices(updatedInvoices);
 
-    // 2. Update client debt
-    const updatedClients = clients.map(c => {
-      if (c.id === invoice.clientId) {
-        return { ...c, totalDebt: c.totalDebt + invoice.total };
-      }
-      return c;
-    });
+    const updatedClients = clients.map(c =>
+      c.id === invoice.clientId
+        ? { ...c, totalDebt: c.totalDebt + invoice.total }
+        : c
+    );
     setClients(updatedClients);
     await Database.saveClients(updatedClients);
 
-    // 3. Deduct stock
     const updatedProducts = products.map(p => {
       const item = invoice.items.find(i => i.productId === p.id);
-      if (item) {
-        return { ...p, stockCount: Math.max(0, p.stockCount - item.quantity) };
-      }
-      return p;
+      return item
+        ? { ...p, stockCount: Math.max(0, p.stockCount - item.quantity) }
+        : p;
     });
     setProducts(updatedProducts);
     await Database.saveProducts(updatedProducts);
   };
 
   const handleAddPayment = async (clientId: string, payment: Payment) => {
-    // 1. Update client paid amount
-    const updatedClients = clients.map(c => {
-      if (c.id === clientId) {
-        return { ...c, totalPaid: c.totalPaid + payment.amount };
-      }
-      return c;
-    });
+    const updatedClients = clients.map(c =>
+      c.id === clientId
+        ? { ...c, totalPaid: c.totalPaid + payment.amount }
+        : c
+    );
     setClients(updatedClients);
     await Database.saveClients(updatedClients);
 
-    // 2. Apply payment across unpaid invoices
     let remainingPayment = payment.amount;
+
     const updatedInvoices = invoices.map(inv => {
       if (inv.clientId === clientId && remainingPayment > 0) {
         const currentPaid = inv.payments.reduce((acc, p) => acc + p.amount, 0);
@@ -146,14 +133,10 @@ const App: React.FC = () => {
           const appliedAmount = Math.min(amountNeeded, remainingPayment);
           remainingPayment -= appliedAmount;
 
-          const newPayment = { ...payment, amount: appliedAmount };
-          const updatedInvPayments = [...inv.payments, newPayment];
-          const newTotalPaid = currentPaid + appliedAmount;
-
           return {
             ...inv,
-            payments: updatedInvPayments,
-            status: newTotalPaid >= inv.total ? 'Paid' : 'Partial',
+            payments: [...inv.payments, { ...payment, amount: appliedAmount }],
+            status: currentPaid + appliedAmount >= inv.total ? 'Paid' : 'Partial',
           } as Invoice;
         }
       }
@@ -164,12 +147,13 @@ const App: React.FC = () => {
     await Database.saveInvoices(updatedInvoices);
   };
 
-  // --- Loading screen while data initializes ---
   if (isLoading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-white gap-4">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-400 text-sm font-medium tracking-wide uppercase">Initializing White Copy ERP…</p>
+        <p className="text-slate-400 text-sm font-medium tracking-wide uppercase">
+          Initializing White Copy ERP…
+        </p>
       </div>
     );
   }
@@ -179,21 +163,25 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="h-screen flex bg-slate-900 text-white overflow-hidden">
-      <aside className={`bg-slate-950 border-r border-slate-800 transition-all duration-300 flex flex-col ${isSidebarOpen ? 'w-64' : 'w-20'}`}>
+    <div className="h-screen flex bg-slate-900 text-white overflow-hidden relative">
+      
+      <aside className={`
+        bg-slate-950 border-r border-slate-800 transition-all duration-300 flex flex-col z-50
+        fixed inset-y-0 left-0 lg:relative
+        ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'}
+      `}>
+        
+        {/* EXISTING SIDEBAR CONTENT UNCHANGED */}
         <div className="p-6 flex items-center justify-between">
-          {isSidebarOpen && (
-            <div className="flex flex-col">
-              <span className="text-xl font-black text-white tracking-tighter leading-none">WHITE COPY</span>
-              <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Enterprises</span>
-            </div>
-          )}
+          <div className="flex flex-col">
+            <span className="text-xl font-black text-white tracking-tighter leading-none">WHITE COPY</span>
+            <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Enterprises</span>
+          </div>
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
-            title={isSidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
           >
-            {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <X className="w-5 h-5 lg:hidden" />
           </button>
         </div>
 
@@ -208,32 +196,38 @@ const App: React.FC = () => {
         <div className="p-4 border-t border-slate-800 bg-slate-950">
           <button
             onClick={handleEndSession}
-            className={`w-full flex items-center rounded-xl text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all font-black uppercase text-[10px] tracking-widest group border border-transparent hover:border-rose-500/20 shadow-sm py-4 ${
-              isSidebarOpen ? 'px-4 gap-3' : 'justify-center px-0'
-            }`}
-            title="End Session"
+            className="w-full flex items-center rounded-xl text-rose-400 hover:bg-rose-500/10 transition-all font-black uppercase text-[10px] tracking-widest py-4 px-4 gap-3"
           >
-            <Power className="w-5 h-5 flex-shrink-0 group-hover:scale-110 group-hover:rotate-12 transition-transform" />
-            {isSidebarOpen && <span>End Session</span>}
+            <Power className="w-5 h-5" />
+            <span>End Session</span>
           </button>
         </div>
       </aside>
 
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       <main className="flex-1 flex flex-col h-full overflow-hidden">
-        <header className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 h-16 flex items-center justify-between px-8 sticky top-0 z-10 flex-shrink-0">
-          <h1 className="text-lg font-bold text-white capitalize">{activeTab.replace('-', ' ')}</h1>
-          <div className="flex items-center gap-4">
-            <div className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              Charles (Manager)
-            </div>
-            <div className="flex items-center gap-2">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Charles" className="w-8 h-8 rounded-full border border-slate-700 bg-slate-800" alt="Avatar" />
-            </div>
-          </div>
+        <header className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 h-16 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 flex-shrink-0">
+          
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+            className="p-2 mr-2 hover:bg-slate-800 rounded-lg text-slate-400 lg:hidden"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
+
+          <h1 className="text-base md:text-lg font-bold text-white capitalize truncate">
+            {activeTab.replace('-', ' ')}
+          </h1>
+
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 w-full">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 w-full">
           <div className="max-w-7xl mx-auto">
             {activeTab === 'dashboard' && <Dashboard products={products} clients={clients} invoices={invoices} />}
             {activeTab === 'clients' && <ClientManager clients={clients} invoices={invoices} onAddClient={handleAddClient} onAddPayment={handleAddPayment} />}

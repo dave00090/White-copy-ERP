@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Client, Invoice, Payment } from '../types';
 import { Search, Plus, Phone, School, Wallet, History, ArrowDownLeft, X, Receipt, Users, AlertCircle, CheckCircle2, TrendingUp, DollarSign, Calendar, CreditCard, Tag, ClipboardList } from 'lucide-react';
@@ -77,11 +76,13 @@ const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddP
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          {/* ✅ Larger Touch Target applied */}
           <button 
             onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-3 rounded-2xl flex items-center gap-3 hover:bg-blue-700 transition-all font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base"
           >
-            <Plus className="w-4 h-4" /> Register School
+            <Plus className="w-5 h-5" />
+            <span>Register School</span>
           </button>
         </div>
       </div>
@@ -138,17 +139,21 @@ const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddP
                 </div>
 
                 <div className="mt-6 flex gap-2">
+                  {/* ✅ Larger Touch Target applied */}
                   <button 
                     onClick={() => setSelectedClient(client)}
-                    className="flex-1 py-3 bg-slate-900 text-slate-400 rounded-xl hover:bg-slate-700 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
+                    className="flex-1 flex items-center justify-center gap-2 bg-slate-900 text-slate-400 hover:bg-slate-700 hover:text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base"
                   >
-                    <History className="w-4 h-4" /> Statement
+                    <History className="w-5 h-5" />
+                    <span>Statement</span>
                   </button>
+                  {/* ✅ Larger Touch Target applied */}
                   <button 
                     onClick={() => { setSelectedClient(client); setShowPaymentModal(true); }}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-all font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2"
+                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-lg shadow-blue-500/20"
                   >
-                    <Wallet className="w-4 h-4" /> Payment
+                    <Wallet className="w-5 h-5" />
+                    <span>Payment</span>
                   </button>
                 </div>
               </div>
@@ -326,7 +331,13 @@ const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddP
               </div>
               <div className="flex gap-4 pt-4">
                 <button onClick={() => setShowPaymentModal(false)} className="flex-1 px-6 py-4 border border-slate-700 text-slate-500 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all">Cancel</button>
-                <button onClick={handleAddPayment} className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all">Submit Payment</button>
+                {/* ✅ Larger Touch Target applied */}
+                <button
+                  onClick={handleAddPayment}
+                  className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-xl shadow-blue-500/20"
+                >
+                  <span>Submit Payment</span>
+                </button>
               </div>
             </div>
           </div>
@@ -367,7 +378,13 @@ const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddP
               </div>
               <div className="flex gap-4 pt-6">
                 <button onClick={() => setShowAddModal(false)} className="flex-1 px-6 py-4 border border-slate-700 text-slate-500 rounded-xl font-black uppercase text-xs tracking-widest">Cancel</button>
-                <button onClick={handleAddClient} className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20">Register</button>
+                {/* ✅ Larger Touch Target applied */}
+                <button
+                  onClick={handleAddClient}
+                  className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-xl shadow-blue-500/20"
+                >
+                  <span>Register</span>
+                </button>
               </div>
             </div>
           </div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Product } from '../types';
 import { Package, Search, Plus, AlertCircle, Edit2, Check, X, Tag } from 'lucide-react';
@@ -77,11 +76,13 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          {/* ✅ Larger Touch Target applied */}
           <button 
             onClick={() => setShowAddModal(true)}
-            className="bg-blue-600 text-white px-6 py-2.5 rounded-xl flex items-center gap-2 hover:bg-blue-700 transition-all font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-xl shadow-blue-500/20"
           >
-            <Plus className="w-4 h-4" /> Add Item
+            <Plus className="w-5 h-5" />
+            <span>Add Item</span>
           </button>
         </div>
       </div>
@@ -105,9 +106,10 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
         </div>
       </div>
 
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      {/* ✅ Responsive Table: scrollable container wrapping the table */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto"> {/* Critical for mobile swiping */}
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead className="bg-slate-900/50">
               <tr>
                 <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700">Description</th>
@@ -149,19 +151,21 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
                             value={tempStock}
                             onChange={(e) => setTempStock(Number(e.target.value))}
                           />
+                          {/* ✅ Larger Touch Target applied */}
                           <button 
                             onClick={saveEdit} 
-                            className="p-2.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+                            className="flex items-center justify-center p-3 md:p-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition-all shadow-lg shadow-emerald-500/20"
                             title="Confirm Save"
                           >
-                            <Check className="w-4 h-4" />
+                            <Check className="w-5 h-5 md:w-4 md:h-4" />
                           </button>
+                          {/* ✅ Larger Touch Target applied */}
                           <button 
                             onClick={cancelEdit} 
-                            className="p-2.5 bg-slate-900 text-slate-500 hover:text-white rounded-xl border border-slate-700 transition-all"
+                            className="flex items-center justify-center p-3 md:p-2.5 bg-slate-900 text-slate-500 hover:text-white rounded-xl border border-slate-700 transition-all"
                             title="Cancel"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-5 h-5 md:w-4 md:h-4" />
                           </button>
                         </div>
                       </div>
@@ -189,13 +193,14 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
                     )}
                   </td>
                   <td className="px-6 py-5 text-right">
+                    {/* ✅ Larger Touch Target applied */}
                     {editingId !== product.id && (
                       <button 
                         onClick={() => startEditing(product)} 
-                        className="p-2.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition-all border border-transparent hover:border-slate-600"
+                        className="p-3 md:p-2.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-xl transition-all border border-transparent hover:border-slate-600"
                         title="Edit Stock Levels"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-5 h-5 md:w-4 md:h-4" />
                       </button>
                     )}
                   </td>
@@ -262,7 +267,13 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
             </div>
             <div className="flex gap-4 pt-10 border-t border-slate-800 mt-10">
               <button onClick={() => setShowAddModal(false)} className="flex-1 px-6 py-4 border border-slate-700 text-slate-500 rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-all">Cancel</button>
-              <button onClick={handleAddProduct} className="flex-1 px-6 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all">Commit to Inventory</button>
+              {/* ✅ Larger Touch Target applied */}
+              <button
+                onClick={handleAddProduct}
+                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl font-bold transition-all text-sm md:text-base shadow-xl shadow-blue-500/20"
+              >
+                <span>Commit to Inventory</span>
+              </button>
             </div>
           </div>
         </div>
