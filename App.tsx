@@ -7,7 +7,7 @@ import InventoryManager from './components/InventoryManager';
 import InvoiceManager from './components/InvoiceManager';
 import Reports from './components/Reports';
 import LoginPage from './components/LoginPage';
-import { LayoutDashboard, Users, Package, FileText, Menu, X, ChevronRight, BarChart2, Power } from 'lucide-react';
+import { LayoutDashboard, Users, Package, FileText, Menu, X, ChevronRight, BarChart2, Power, User } from 'lucide-react';
 
 const SidebarItem = ({ id, icon: Icon, label, activeTab, isSidebarOpen, onClick }: any) => (
   <button
@@ -29,7 +29,9 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'clients' | 'inventory' | 'invoices' | 'reports'>('dashboard');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Sidebar is closed by default on mobile, open on desktop
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -107,12 +109,12 @@ const App: React.FC = () => {
   };
 
   const handleCreateInvoice = async (invoice: Invoice) => {
-  // Normalize date to clean DD/MM/YYYY format
-  const cleanDate = new Date(invoice.date).toLocaleDateString('en-GB');
-  invoice = { ...invoice, date: cleanDate };
+    // Normalize date to clean DD/MM/YYYY format
+    const cleanDate = new Date(invoice.date).toLocaleDateString('en-GB');
+    invoice = { ...invoice, date: cleanDate };
 
-  // 1. Save invoice
-  const updatedInvoices = [...invoices, invoice];
+    // 1. Save invoice
+    const updatedInvoices = [...invoices, invoice];
     setInvoices(updatedInvoices);
     await Database.saveInvoices(updatedInvoices);
 
@@ -192,32 +194,35 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen flex bg-slate-900 text-white overflow-hidden relative">
-      
+
+      {/* SIDEBAR: Hidden on mobile by default, slides in when open, always visible on desktop */}
       <aside className={`
-        bg-slate-950 border-r border-slate-800 transition-all duration-300 flex flex-col z-50
-        fixed inset-y-0 left-0 lg:relative
-        ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full lg:translate-x-0'}
+        fixed inset-y-0 left-0 z-50 w-64 bg-slate-950 border-r border-slate-800
+        transition-transform duration-300 transform flex flex-col
+        lg:relative lg:translate-x-0
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        
+
         <div className="p-6 flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-xl font-black text-white tracking-tighter leading-none">WHITE COPY</span>
             <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-1">Enterprises</span>
           </div>
+          {/* Close button — mobile only */}
           <button
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors"
+            onClick={() => setIsSidebarOpen(false)}
+            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors lg:hidden"
           >
-            <X className="w-5 h-5 lg:hidden" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto overflow-x-hidden">
-          <SidebarItem id="dashboard" icon={LayoutDashboard} label="Dashboard" activeTab={activeTab} isSidebarOpen={isSidebarOpen} onClick={setActiveTab} />
-          <SidebarItem id="clients" icon={Users} label="School Clients" activeTab={activeTab} isSidebarOpen={isSidebarOpen} onClick={setActiveTab} />
-          <SidebarItem id="inventory" icon={Package} label="Inventory & Spares" activeTab={activeTab} isSidebarOpen={isSidebarOpen} onClick={setActiveTab} />
-          <SidebarItem id="invoices" icon={FileText} label="Invoices & Deliveries" activeTab={activeTab} isSidebarOpen={isSidebarOpen} onClick={setActiveTab} />
-          <SidebarItem id="reports" icon={BarChart2} label="Business Reports" activeTab={activeTab} isSidebarOpen={isSidebarOpen} onClick={setActiveTab} />
+          <SidebarItem id="dashboard" icon={LayoutDashboard} label="Dashboard" activeTab={activeTab} isSidebarOpen={true} onClick={(id: string) => { setActiveTab(id as any); setIsSidebarOpen(false); }} />
+          <SidebarItem id="clients" icon={Users} label="School Clients" activeTab={activeTab} isSidebarOpen={true} onClick={(id: string) => { setActiveTab(id as any); setIsSidebarOpen(false); }} />
+          <SidebarItem id="inventory" icon={Package} label="Inventory & Spares" activeTab={activeTab} isSidebarOpen={true} onClick={(id: string) => { setActiveTab(id as any); setIsSidebarOpen(false); }} />
+          <SidebarItem id="invoices" icon={FileText} label="Invoices & Deliveries" activeTab={activeTab} isSidebarOpen={true} onClick={(id: string) => { setActiveTab(id as any); setIsSidebarOpen(false); }} />
+          <SidebarItem id="reports" icon={BarChart2} label="Business Reports" activeTab={activeTab} isSidebarOpen={true} onClick={(id: string) => { setActiveTab(id as any); setIsSidebarOpen(false); }} />
         </nav>
 
         <div className="p-4 border-t border-slate-800 bg-slate-950">
@@ -231,19 +236,23 @@ const App: React.FC = () => {
         </div>
       </aside>
 
+      {/* OVERLAY: Dims background on mobile when sidebar is open */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+        <div
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      <main className="flex-1 flex flex-col h-full overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* HEADER: Hamburger on mobile, user info on right */}
         <header className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 h-16 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 flex-shrink-0">
-          
-          <button 
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-            className="p-2 mr-2 hover:bg-slate-800 rounded-lg text-slate-400 lg:hidden"
+
+          {/* Hamburger — mobile only */}
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 lg:hidden text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -252,10 +261,18 @@ const App: React.FC = () => {
             {activeTab.replace('-', ' ')}
           </h1>
 
+          {/* User info */}
+          <div className="flex items-center gap-4">
+            <span className="hidden md:block text-sm text-slate-400">Charles</span>
+            <button className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
+              <User className="w-5 h-5" />
+            </button>
+          </div>
         </header>
 
+        {/* CONTENT AREA */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8 w-full">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto space-y-6">
             {activeTab === 'dashboard' && <Dashboard products={products} clients={clients} invoices={invoices} />}
             {activeTab === 'clients' && (
               <ClientManager
