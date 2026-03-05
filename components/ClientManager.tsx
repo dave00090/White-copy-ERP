@@ -7,7 +7,7 @@ interface Props {
   invoices: Invoice[];
   onAddClient: (client: Client) => void;
   onAddPayment: (clientId: string, payment: Payment) => void;
-  onDeleteClient: (clientId: string) => void; // Added
+  onDeleteClient: (clientId: string) => void;
 }
 
 const ClientManager: React.FC<Props> = ({ clients, invoices, onAddClient, onAddPayment, onDeleteClient }) => {

@@ -27,6 +27,7 @@
             width: 100%;
             display: flex;
             flex-direction: column;
+            height: 100dvh; /* Dynamic viewport height for mobile browsers */
         }
 
         @media print {
@@ -38,6 +39,11 @@
         /* Increase input font size to prevent iOS auto-zoom */
         input, select, textarea {
             font-size: 16px !important;
+        }
+
+        /* Improve touch responsiveness */
+        button, a {
+            touch-action: manipulation;
         }
 
         /* Custom scrollbar styling for a consistent professional look */

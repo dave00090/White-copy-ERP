@@ -109,9 +109,10 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+      {/* ✅ Updated: bg-slate-950, border-slate-800, min-w-[700px] for mobile horizontal scroll */}
+      <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[600px]">
+          <table className="w-full text-left border-collapse min-w-[700px]">
             <thead className="bg-slate-900/50">
               <tr>
                 <th className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-700">Description</th>
@@ -265,7 +266,6 @@ const InventoryManager: React.FC<Props> = ({ products, onAddProduct, onUpdateSto
                   <option value="Printer">Printer</option>
                   <option value="Service">Service</option>
                   <option value="Others">Others</option>
-                  
                 </select>
               </div>
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Product, Client, Invoice } from '../types';
 import { TrendingUp, Users, Package, AlertTriangle, DollarSign, Wallet, CheckCircle2 } from 'lucide-react';
@@ -40,7 +39,7 @@ const Dashboard: React.FC<Props> = ({ products, clients, invoices }) => {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Financial Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatsCard 
           title="Total Revenue" 
           value={`KES ${totalRevenue.toLocaleString()}`} 
